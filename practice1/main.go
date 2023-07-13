@@ -24,10 +24,14 @@ func main() {
 	fmt.Printf("%+v\n", formatData)
 
 	//a + b + cの計算結果を得る
+	sumAbc := sumABbcData(formatData)
+	fmt.Println(sumAbc)
 
 	//出力形式に沿って整形する
+	output := formatOutput(sumAbc, formatData.s)
 
 	//結果出力
+	fmt.Println(output)
 }
 
 func fetchStdin() (result []string, err error) {
@@ -95,5 +99,15 @@ func EasyAtoi(s string) (i int) {
 		panic(err)
 	}
 
+	return
+}
+
+func sumABbcData(pd practiceData) (sum int) {
+	sum = pd.a + pd.b + pd.c
+	return
+}
+
+func formatOutput(i int, s string) (output string) {
+	output = fmt.Sprintf("%d %s", i, s)
 	return
 }
