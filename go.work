@@ -1,3 +1,6 @@
 go 1.20
 
-use ./practice1
+use (
+    ./practice1
+    ./practice2
+)
