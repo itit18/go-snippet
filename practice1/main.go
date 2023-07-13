@@ -14,18 +14,18 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(stdin)
+	//fmt.Println(stdin)
 
 	//引数を問題文に沿った形で整理する
 	formatData, err := formatPracticeData(stdin)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%+v\n", formatData)
+	//fmt.Printf("%+v\n", formatData)
 
 	//a + b + cの計算結果を得る
 	sumAbc := sumABbcData(formatData)
-	fmt.Println(sumAbc)
+	//fmt.Println(sumAbc)
 
 	//出力形式に沿って整形する
 	output := formatOutput(sumAbc, formatData.s)
