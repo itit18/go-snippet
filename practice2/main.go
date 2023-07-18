@@ -15,11 +15,16 @@ func main() {
 	}
 	fmt.Println(stdin)
 
+	//問題文に沿ってデータを整形
 	pd, err := formatPracticeData(stdin)
 	if err != nil {
 		panic(err)
 	}
 	tools.PrintStruct(pd)
+
+	//判定処理
+	output := isProductEvenOrOdd(pd)
+	fmt.Println(output)
 }
 
 // 問題文で指定された入力データ形式
@@ -42,6 +47,18 @@ func formatPracticeData(stdin []string) (data practiceData, err error) {
 	if data.b < 1 || data.b > 10000 {
 		err = errors.New("bの値が不正です")
 		return
+	}
+
+	return
+}
+
+// 入力値の積を判定する
+func isProductEvenOrOdd(pd practiceData) (output string) {
+	p := pd.a * pd.b
+	if (p % 2) == 0 {
+		output = "Even"
+	} else {
+		output = "Odd"
 	}
 
 	return
