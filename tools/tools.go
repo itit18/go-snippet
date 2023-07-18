@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 /********************************/
@@ -23,6 +24,21 @@ func FetchStdin() (result []string, err error) {
 	}
 
 	return
+}
+
+// strconv.Atoiのエラー処理付きのシンタックスシュガー
+func EasyAtoi(s string) (i int) {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		panic(err)
+	}
+
+	return
+}
+
+// 構造体をデバッグ出力するときのシンタックスシュガー
+func PrintStruct(st interface{}) {
+	fmt.Printf("%+v\n", st)
 }
 
 // ちゃんとインポートできてるか動作確認用 / そのうち消す
