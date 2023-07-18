@@ -1,26 +1,28 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
-	"tools" // ローカルパッケージ
 )
 
 func main() {
 	//標準入力を取得
-	stdin, err := tools.FetchStdin()
+	stdin, err := FetchStdin()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(stdin)
+	// fmt.Println(stdin)
 
 	//問題文に沿ってデータを整形
 	pd, err := formatPracticeData(stdin)
 	if err != nil {
 		panic(err)
 	}
-	tools.PrintStruct(pd)
+	// tools.PrintStruct(pd)
 
 	//判定処理
 	output := isProductEvenOrOdd(pd)
@@ -36,8 +38,8 @@ type practiceData struct {
 // 標準出力を整形して問題文で指定された入力形式に整形
 func formatPracticeData(stdin []string) (data practiceData, err error) {
 	sd := strings.Split(stdin[0], " ")
-	data.a = tools.EasyAtoi(sd[0])
-	data.b = tools.EasyAtoi(sd[1])
+	data.a = EasyAtoi(sd[0])
+	data.b = EasyAtoi(sd[1])
 
 	//検査
 	if data.a < 1 || data.a > 10000 {
@@ -62,4 +64,36 @@ func isProductEvenOrOdd(pd practiceData) (output string) {
 	}
 
 	return
+}
+
+//提出用にtoolsライブラリをコピペする
+
+// 標準入力からデータを受け取る
+func FetchStdin() (result []string, err error) {
+	sc := bufio.NewScanner(os.Stdin)
+	if sc.Err() != nil {
+		err = sc.Err()
+		return
+	}
+
+	for sc.Scan() {
+		result = append(result, sc.Text())
+	}
+
+	return
+}
+
+// strconv.Atoiのエラー処理付きのシンタックスシュガー
+func EasyAtoi(s string) (i int) {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		panic(err)
+	}
+
+	return
+}
+
+// 構造体をデバッグ出力するときのシンタックスシュガー
+func PrintStruct(st interface{}) {
+	fmt.Printf("%+v\n", st)
 }
