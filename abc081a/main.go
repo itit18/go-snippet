@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+
 	"tools"
 )
 
@@ -12,9 +13,9 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(stdin)
+	//fmt.Println(stdin)
 	cellData := makeCell(stdin[0])
-	tools.PrintStruct(cellData)
+	//tools.PrintStruct(cellData)
 	result := countMarble(cellData)
 
 	fmt.Println(result)
