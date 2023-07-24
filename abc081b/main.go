@@ -19,6 +19,9 @@ func main() {
 	}
 	tools.PrintStruct(data)
 
+	output := countAllHalve(data.values)
+	fmt.Println(output)
+
 }
 
 // 問題文で指定された入力値の形式
@@ -32,6 +35,47 @@ func makeAssignmentData(stdin []string) (result assignmentData, err error) {
 	sp := strings.Split(stdin[1], " ")
 	for _, d := range sp {
 		result.values = append(result.values, tools.EasyAtoi(d))
+	}
+
+	return
+}
+
+// 「配列内の要素を2で割ったものに置き換える」の処理回数を数える
+func countAllHalve(values []int) (counter int) {
+	//入力値の最大数が10の9乗なので15回ループで制限しとけば余裕あるはず（適当）
+	for i := 0; i < 15; i++ {
+		// 先に配列内が全て偶数であるかを確認しておく
+		if !verifyAllEven(values) {
+			break
+		}
+
+		values = halveArrayValues(values)
+		counter++
+	}
+	return
+
+}
+
+// 配列内の要素を2で割ったものに置き換える
+func halveArrayValues(values []int) (halveValues []int) {
+	for _, v := range values {
+		halveValues = append(halveValues, v/2)
+	}
+
+	return
+}
+
+func verifyAllEven(values []int) (result bool) {
+	result = true
+	for _, v := range values {
+		if v == 0 {
+			result = false
+			break
+		}
+		if v%2 == 1 {
+			result = false
+			break
+		}
 	}
 
 	return
