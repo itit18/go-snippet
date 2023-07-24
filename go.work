@@ -3,5 +3,6 @@ go 1.20
 use (
     ./practice1
     ./practice2
+    ./abc081a
     ./tools
 )
