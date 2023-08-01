@@ -42,8 +42,8 @@ func makeAssignmentData(stdin []string) (result assignmentData, err error) {
 
 // 「配列内の要素を2で割ったものに置き換える」の処理回数を数える
 func countAllHalve(values []int) (counter int) {
-	//入力値の最大数が10の9乗なので15回ループで制限しとけば余裕あるはず（適当）
-	for i := 0; i < 15; i++ {
+	//一応繰り返し動作の上限を決めておく、chatGPTいわく最大数は30らしい
+	for i := 0; i < 30; i++ {
 		// 先に配列内が全て偶数であるかを確認しておく
 		if !verifyAllEven(values) {
 			break
