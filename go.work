@@ -4,5 +4,6 @@ use (
     ./practice1
     ./practice2
     ./abc081a
+    ./abc081b
     ./tools
 )
