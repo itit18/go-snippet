@@ -6,8 +6,6 @@ import (
 )
 
 func main() {
-	var output int
-
 	stdin, err := tools.FetchStdin()
 	if err != nil {
 		panic(err)
@@ -20,7 +18,13 @@ func main() {
 	}
 	tools.PrintStruct(input)
 
-	fmt.Println(output)
+	haveCoin := CoinPattern{}
+	haveCoin.coinOf500yen = input.coinOf500yen
+	haveCoin.coinOf100yen = input.coinOf100yen
+	haveCoin.coinOf50yen = input.coinOf50yen
+	paymentPatterns := CalcPaymentPattarn(input.totalAmount, haveCoin)
+
+	fmt.Println(len(paymentPatterns))
 }
 
 // 問題文で定義されたデータ構造
