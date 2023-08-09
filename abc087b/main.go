@@ -10,13 +10,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(stdin)
+	// fmt.Println(stdin)
 
 	input, err := makeAssignmentData(stdin)
 	if err != nil {
 		panic(err)
 	}
-	tools.PrintStruct(input)
+	// tools.PrintStruct(input)
 
 	haveCoin := CoinPattern{}
 	haveCoin.coinOf500yen = input.coinOf500yen

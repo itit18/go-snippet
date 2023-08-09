@@ -1,16 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
-/*
-パターンメモ
-500円：10枚:5千円を100円と交換可能, 5枚2500円を50円と交換可能
-100円：25枚:2500円を50円と交換可能
-50円： 50枚～0枚
-*/
-
 // 　条件を満たすコインの組み合わせパターン構造体
 type CoinPattern struct {
 	coinOf500yen int
@@ -21,23 +10,37 @@ type CoinPattern struct {
 func CalcPaymentPattarn(totalAmont int, haveCoin CoinPattern) (paymentPatterns []CoinPattern) {
 	var totals map[string]int = make(map[string]int)
 
+	//手持ち金額が支払額を上回っているかをチェック
+	if !isPay(totalAmont, haveCoin) {
+		return
+	}
+
 	//合計金額を500で割り切れる数と、端数に分解する
 	totals["500"], totals["other"] = divisionWithRemainder(totalAmont, 500)
-	fmt.Println(totals["500"], totals["other"])
+	// fmt.Println(totals["500"], totals["other"])
 
 	//500円で支払える額について支払いパターンを算出する
-	payment500 := Make500yenPaymentPattern(totals["500"]*500, haveCoin)
+	payment500, failFlg := Make500yenPaymentPattern(totals["500"]*500, haveCoin)
+	if failFlg {
+		return
+	}
 
 	//残りの端数について、100円と50円の支払いパターンを算出する
-	payment100 := Make100yenPaymentPattern(totals["other"], haveCoin)
-
-	fmt.Println(len(payment100))
-	fmt.Println(len(payment500))
+	payment100, failFlg := Make100yenPaymentPattern(totals["other"], haveCoin)
+	if failFlg {
+		return
+	}
 
 	//合成して手持ちコイン数を上回ってしまうパターンを枝切り
 	paymentPatterns = MergePaymentPattern(payment500, payment100, haveCoin)
 
 	return
+}
+
+// 支払い能力の可否チェック
+func isPay(totalAmont int, haveCoin CoinPattern) bool {
+	sumCoin := (haveCoin.coinOf500yen * 500) + (haveCoin.coinOf100yen * 100) + (haveCoin.coinOf50yen * 50)
+	return totalAmont <= sumCoin
 }
 
 // 2つの支払いパターンを合成する
@@ -57,27 +60,44 @@ func MergePaymentPattern(main []CoinPattern, sub []CoinPattern, haveCoin CoinPat
 			if haveCoin.coinOf50yen < n.coinOf50yen {
 				continue
 			}
+			//重複チェック
+			if existsPttern(marge, n) {
+				continue
+			}
+			// tools.PrintStruct(n)
 			marge = append(marge, n)
 		}
+	}
+
+	//空配列があったときの処理パターン
+	if len(main) == 0 {
+		marge = sub
+	}
+	if len(sub) == 0 {
+		marge = main
 	}
 
 	return
 }
 
 // 100円で支払えるパターンについてパターンを生成
-func Make100yenPaymentPattern(totalAmont int, haveCoin CoinPattern) (paymentPatterns []CoinPattern) {
-	basePattern := MakeCoinPattern(totalAmont, haveCoin)
+// failFlg = 論理的に支払いすることが不可能なパターンを伝えるフラグ
+func Make100yenPaymentPattern(totalAmont int, haveCoin CoinPattern) (paymentPatterns []CoinPattern, failFlg bool) {
+	failFlg = false
+	if totalAmont == 0 {
+		return
+	}
+
+	basePattern, failFlg := MakeCoinPattern(totalAmont, haveCoin)
+	if failFlg {
+		return
+	}
 	paymentPatterns = append(paymentPatterns, basePattern)
 
 	//100円→50円の両替
 	for i := 0; i < len(paymentPatterns); i++ {
-		base := paymentPatterns[i]
-		base.coinOf100yen = base.coinOf100yen - 1
-		base.coinOf50yen = base.coinOf50yen + 2
-		if base.coinOf100yen < 0 {
-			continue
-		}
-		if haveCoin.coinOf50yen < basePattern.coinOf50yen {
+		base, fail := exchange100yenTo50yen(paymentPatterns[i], haveCoin)
+		if fail {
 			continue
 		}
 
@@ -88,8 +108,19 @@ func Make100yenPaymentPattern(totalAmont int, haveCoin CoinPattern) (paymentPatt
 }
 
 // 500円で支払えるパターンについてパターンを生成
-func Make500yenPaymentPattern(totalAmont int, haveCoin CoinPattern) (paymentPatterns []CoinPattern) {
-	basePattern := MakeCoinPattern(totalAmont, haveCoin)
+// failFlg = 論理的に支払いすることが不可能なパターンを伝えるフラグ
+func Make500yenPaymentPattern(totalAmont int, haveCoin CoinPattern) (paymentPatterns []CoinPattern, failFlg bool) {
+	failFlg = false
+
+	if totalAmont == 0 {
+		return
+	}
+
+	basePattern, failFlg := MakeCoinPattern(totalAmont, haveCoin)
+	if failFlg {
+		return
+	}
+
 	// tools.PrintStruct(basePattern)
 	paymentPatterns = append(paymentPatterns, basePattern)
 
@@ -103,7 +134,6 @@ func Make500yenPaymentPattern(totalAmont int, haveCoin CoinPattern) (paymentPatt
 		}
 
 		if !exchangeFail {
-			// tools.PrintStruct(exchange100)
 			paymentPatterns = append(paymentPatterns, exchange100)
 		}
 
@@ -115,7 +145,6 @@ func Make500yenPaymentPattern(totalAmont int, haveCoin CoinPattern) (paymentPatt
 		}
 
 		if !exchangeFail {
-			// tools.PrintStruct(exchange50)
 			paymentPatterns = append(paymentPatterns, exchange50)
 		}
 	}
@@ -127,16 +156,15 @@ func Make500yenPaymentPattern(totalAmont int, haveCoin CoinPattern) (paymentPatt
 			continue
 		}
 
-		exchange, failFlg := exchange100yenTo50yen(paymentPatterns[i], haveCoin)
+		exchange, exchangeFail := exchange100yenTo50yen(paymentPatterns[i], haveCoin)
 		if existsPttern(addPatteerns, exchange) {
-			failFlg = true
+			exchangeFail = true
 		}
 		if existsPttern(paymentPatterns, exchange) {
-			failFlg = true
+			exchangeFail = true
 		}
 
-		if !failFlg {
-			// tools.PrintStruct(exchange)
+		if !exchangeFail {
 			paymentPatterns = append(paymentPatterns, exchange)
 		}
 	}
@@ -227,8 +255,10 @@ func equalCoinPattern(a CoinPattern, b CoinPattern) bool {
 }
 
 // 合計金額を満たすコイン選択パターンを1つ生成する
-func MakeCoinPattern(totalAmont int, haveCoin CoinPattern) (result CoinPattern) {
+func MakeCoinPattern(totalAmont int, haveCoin CoinPattern) (result CoinPattern, failFlg bool) {
 	var remainder int
+	failFlg = false
+
 	//単純な理想値で500円の支払い枚数を算出
 	result.coinOf500yen, remainder = divisionWithRemainder(totalAmont, 500)
 	//理想値よりも手持ちコインが少ないときの処理
@@ -247,6 +277,16 @@ func MakeCoinPattern(totalAmont int, haveCoin CoinPattern) (result CoinPattern) 
 	}
 
 	result.coinOf50yen, _ = divisionWithRemainder(remainder, 50)
+	if haveCoin.coinOf50yen < result.coinOf50yen {
+		result.coinOf50yen = haveCoin.coinOf50yen
+	}
+
+	//支払いパターンが存在しなかったときの処理
+	sumCoin := (result.coinOf500yen * 500) + (result.coinOf100yen * 100) + (result.coinOf50yen * 50)
+	if totalAmont != sumCoin {
+		failFlg = true
+		result = CoinPattern{} //支払額に満たない場合、初期化して返す
+	}
 
 	return
 }
