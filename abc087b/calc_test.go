@@ -38,7 +38,21 @@ func TestMake500yenPaymentPattern(t *testing.T) {
 	data := Make500yenPaymentPattern(1000, haveCoin)
 
 	actual := len(data)
-	expect := 7
+	expect := 6 + 4 + 8
+	assert.Equal(t, expect, actual)
+	assert.NotEqual(t, data[0], data[1])
+}
+
+func TestMake500yenPaymentPattern_入力例テスト(t *testing.T) {
+	haveCoin := CoinPattern{
+		coinOf500yen: 30,
+		coinOf100yen: 40,
+		coinOf50yen:  50,
+	}
+	data := Make500yenPaymentPattern(6000, haveCoin)
+
+	actual := len(data)
+	expect := 213
 	assert.Equal(t, expect, actual)
 	assert.NotEqual(t, data[0], data[1])
 }
