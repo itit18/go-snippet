@@ -37,12 +37,6 @@ func CalcPaymentPattarn(totalAmont int, haveCoin CoinPattern) (paymentPatterns [
 	return
 }
 
-// 支払い能力の可否チェック
-func isPay(totalAmont int, haveCoin CoinPattern) bool {
-	sumCoin := (haveCoin.coinOf500yen * 500) + (haveCoin.coinOf100yen * 100) + (haveCoin.coinOf50yen * 50)
-	return totalAmont <= sumCoin
-}
-
 // 2つの支払いパターンを合成する
 func MergePaymentPattern(main []CoinPattern, sub []CoinPattern, haveCoin CoinPattern) (marge []CoinPattern) {
 	for _, m := range main {
@@ -172,6 +166,82 @@ func Make500yenPaymentPattern(totalAmont int, haveCoin CoinPattern) (paymentPatt
 	return
 }
 
+// 合計金額を満たすコイン選択パターンを1つ生成する
+func MakeCoinPattern(totalAmont int, haveCoin CoinPattern) (result CoinPattern, failFlg bool) {
+	var remainder int
+	failFlg = false
+
+	//単純な理想値で500円の支払い枚数を算出
+	result.coinOf500yen, remainder = divisionWithRemainder(totalAmont, 500)
+	//理想値よりも手持ちコインが少ないときの処理
+	if haveCoin.coinOf500yen < result.coinOf500yen {
+		diff := result.coinOf500yen - haveCoin.coinOf500yen
+		result.coinOf500yen = haveCoin.coinOf500yen
+		remainder = diff*500 + remainder
+	}
+
+	//500円と同じ処理で枚数算出
+	result.coinOf100yen, remainder = divisionWithRemainder(remainder, 100)
+	if haveCoin.coinOf100yen < result.coinOf100yen {
+		diff := result.coinOf100yen - haveCoin.coinOf100yen
+		result.coinOf100yen = haveCoin.coinOf100yen
+		remainder = diff*100 + remainder
+	}
+
+	result.coinOf50yen, _ = divisionWithRemainder(remainder, 50)
+	if haveCoin.coinOf50yen < result.coinOf50yen {
+		result.coinOf50yen = haveCoin.coinOf50yen
+	}
+
+	//支払いパターンが存在しなかったときの処理
+	sumCoin := (result.coinOf500yen * 500) + (result.coinOf100yen * 100) + (result.coinOf50yen * 50)
+	if totalAmont != sumCoin {
+		failFlg = true
+		result = CoinPattern{} //支払額に満たない場合、初期化して返す
+	}
+
+	return
+}
+
+///////////////////////////////
+//  Privete
+///////////////////////////////
+
+// 除算の結果と余りを返す
+func divisionWithRemainder(dividend, divisor int) (quotient, remainder int) {
+	if dividend == 0 {
+		return
+	}
+	quotient = dividend / divisor
+	remainder = dividend % divisor
+
+	return
+}
+
+// 重複するパターンが登録済みかをチェックする
+func existsPttern(patterns []CoinPattern, check CoinPattern) bool {
+	for _, p := range patterns {
+		if equalCoinPattern(p, check) {
+			return true
+		}
+	}
+	return false
+}
+
+// CoinPatternが同一かをチェックする
+func equalCoinPattern(a CoinPattern, b CoinPattern) bool {
+	if a.coinOf500yen != b.coinOf500yen {
+		return false
+	}
+	if a.coinOf100yen != b.coinOf100yen {
+		return false
+	}
+	if a.coinOf50yen != b.coinOf50yen {
+		return false
+	}
+	return true
+}
+
 // 両替処理 / 500円→100円 / 両替不可能な場合はfailFlgで検知
 func exchange500yenTo100yen(c CoinPattern, haveCoin CoinPattern) (r CoinPattern, failFlg bool) {
 	r = c
@@ -230,74 +300,8 @@ func exchange100yenTo50yen(c CoinPattern, haveCoin CoinPattern) (r CoinPattern, 
 	return
 }
 
-// 重複するパターンが登録済みかをチェックする
-func existsPttern(patterns []CoinPattern, check CoinPattern) bool {
-	for _, p := range patterns {
-		if equalCoinPattern(p, check) {
-			return true
-		}
-	}
-	return false
-}
-
-// CoinPatternが同一かをチェックする
-func equalCoinPattern(a CoinPattern, b CoinPattern) bool {
-	if a.coinOf500yen != b.coinOf500yen {
-		return false
-	}
-	if a.coinOf100yen != b.coinOf100yen {
-		return false
-	}
-	if a.coinOf50yen != b.coinOf50yen {
-		return false
-	}
-	return true
-}
-
-// 合計金額を満たすコイン選択パターンを1つ生成する
-func MakeCoinPattern(totalAmont int, haveCoin CoinPattern) (result CoinPattern, failFlg bool) {
-	var remainder int
-	failFlg = false
-
-	//単純な理想値で500円の支払い枚数を算出
-	result.coinOf500yen, remainder = divisionWithRemainder(totalAmont, 500)
-	//理想値よりも手持ちコインが少ないときの処理
-	if haveCoin.coinOf500yen < result.coinOf500yen {
-		diff := result.coinOf500yen - haveCoin.coinOf500yen
-		result.coinOf500yen = haveCoin.coinOf500yen
-		remainder = diff*500 + remainder
-	}
-
-	//500円と同じ処理で枚数算出
-	result.coinOf100yen, remainder = divisionWithRemainder(remainder, 100)
-	if haveCoin.coinOf100yen < result.coinOf100yen {
-		diff := result.coinOf100yen - haveCoin.coinOf100yen
-		result.coinOf100yen = haveCoin.coinOf100yen
-		remainder = diff*100 + remainder
-	}
-
-	result.coinOf50yen, _ = divisionWithRemainder(remainder, 50)
-	if haveCoin.coinOf50yen < result.coinOf50yen {
-		result.coinOf50yen = haveCoin.coinOf50yen
-	}
-
-	//支払いパターンが存在しなかったときの処理
-	sumCoin := (result.coinOf500yen * 500) + (result.coinOf100yen * 100) + (result.coinOf50yen * 50)
-	if totalAmont != sumCoin {
-		failFlg = true
-		result = CoinPattern{} //支払額に満たない場合、初期化して返す
-	}
-
-	return
-}
-
-// 除算の結果と余りを返す
-func divisionWithRemainder(dividend, divisor int) (quotient, remainder int) {
-	if dividend == 0 {
-		return
-	}
-	quotient = dividend / divisor
-	remainder = dividend % divisor
-
-	return
+// 支払い能力の可否チェック
+func isPay(totalAmont int, haveCoin CoinPattern) bool {
+	sumCoin := (haveCoin.coinOf500yen * 500) + (haveCoin.coinOf100yen * 100) + (haveCoin.coinOf50yen * 50)
+	return totalAmont <= sumCoin
 }
